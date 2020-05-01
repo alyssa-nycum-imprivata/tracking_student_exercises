@@ -268,11 +268,52 @@ class StudentExerciseReports():
 
             print("****STUDENTS WITH ASSIGNED EXERCISES****")
             for student_name, exercises in students.items():
-                print(student_name)
+                print(f'{student_name} is working on:')
                 for exercise in exercises:
                     print(f'\t* {exercise}')
             print("----------------------------------------")
 
+    def instructors_with_exercises(self):
+
+        """Retrieve all instructors with the exercises each instructor assigns"""
+
+        instructors = dict()
+
+        with sqlite3.connect(self.db_path) as conn:
+            db_cursor = conn.cursor()
+
+            db_cursor.execute("""
+                SELECT
+                    i.Id AS InstructorId,
+                    i.First_Name,
+                    i.Last_Name,
+                    e.Id AS ExerciseId,
+                    e.Name
+                FROM Instructor i
+                JOIN Student_Exercises se ON i.Id = se.InstructorId
+                JOIN Exercise e ON e.Id = se.ExerciseId
+                GROUP BY ExerciseId
+            """)
+
+            dataset = db_cursor.fetchall()
+
+            for row in dataset:
+                instructor_id = row[0]
+                instructor_name = f'{row[1]} {row[2]}'
+                exercise_id = row[3]
+                exercise_name = row[4]
+
+                if instructor_name not in instructors:
+                    instructors[instructor_name] = [exercise_name]
+                else:
+                    instructors[instructor_name].append(exercise_name)
+
+            print("****INSTRUCTORS WITH ASSIGNED EXERCISES****")
+            for instructor_name, exercises in instructors.items():
+                print(f'{instructor_name} has assigned:')
+                for exercise in exercises:
+                    print(f'\t* {exercise}')
+            print("----------------------------------------")
 
 reports = StudentExerciseReports()
 reports.all_cohorts()
@@ -284,5 +325,6 @@ reports.python_exercises()
 reports.cSharp_exercises()
 reports.exercises_with_students()
 reports.students_with_exercises()
+reports.instructors_with_exercises()
 
 
