@@ -166,7 +166,7 @@ class StudentExerciseReports():
 
     def cSharp_exercises(self):
 
-        """Retrieve c# exercises"""
+        """Retrieve C# exercises"""
 
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = lambda cursor, row: Exercise(row[1], row[2]) 
@@ -191,6 +191,47 @@ class StudentExerciseReports():
                     print(e.name)
             print("----------------------------------------")
 
+    def exercises_with_students(self):
+
+        """Retrieve all exercises with the students assigned to each exercise"""
+
+        exercises = dict()
+
+        with sqlite3.connect(self.db_path) as conn:
+            db_cursor = conn.cursor()
+
+            db_cursor.execute("""
+                SELECT
+                    e.Id AS ExerciseId,
+                    e.Name,
+                    s.Id,
+                    s.First_Name,
+                    s.Last_Name
+                FROM Exercise e
+                JOIN Student_Exercises se ON se.ExerciseId = e.Id
+                JOIN Student s ON s.Id = se.StudentId
+            """)
+
+            dataset = db_cursor.fetchall()
+
+            for row in dataset:
+                exercise_id = row[0]
+                exercise_name = row[1]
+                student_id = row[2]
+                student_name = f'{row[3]} {row[4]}'
+
+                if exercise_name not in exercises:
+                    exercises[exercise_name] = [student_name]
+                else:
+                    exercises[exercise_name].append(student_name)
+
+            print("****EXERCISES WITH ASSIGNED STUDENTS****")
+            for exercise_name, students in exercises.items():
+                print(exercise_name)
+                for student in students:
+                    print(f'\t* {student}')
+            print("----------------------------------------")
+
 
 
 reports = StudentExerciseReports()
@@ -201,6 +242,7 @@ reports.all_exercises()
 reports.javascript_exercises()
 reports.python_exercises()
 reports.cSharp_exercises()
+reports.exercises_with_students()
 
 
 
