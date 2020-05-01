@@ -232,6 +232,46 @@ class StudentExerciseReports():
                     print(f'\t* {student}')
             print("----------------------------------------")
 
+    def students_with_exercises(self):
+        
+        """Retrieve all students with the exercises assigned to each student"""
+
+        students = dict()
+
+        with sqlite3.connect(self.db_path) as conn:
+            db_cursor = conn.cursor()
+
+            db_cursor.execute("""
+                SELECT
+                    s.Id AS StudentId,
+                    s.First_Name,
+                    s.Last_Name,
+                    e.Id AS ExerciseId,
+                    e.Name
+                FROM Student s
+                JOIN Student_Exercises se ON se.StudentId = s.Id
+                JOIN Exercise e ON e.Id = se.ExerciseId
+            """)
+
+            dataset = db_cursor.fetchall()
+
+            for row in dataset:
+                student_id = row[0]
+                student_name = f'{row[1]} {row[2]}'
+                exercise_id = row[3]
+                exercise_name = row[4]
+
+                if student_name not in students:
+                    students[student_name] = [exercise_name]
+                else:
+                    students[student_name].append(exercise_name)
+
+            print("****STUDENTS WITH ASSIGNED EXERCISES****")
+            for student_name, exercises in students.items():
+                print(student_name)
+                for exercise in exercises:
+                    print(f'\t* {exercise}')
+            print("----------------------------------------")
 
 
 reports = StudentExerciseReports()
@@ -243,6 +283,6 @@ reports.javascript_exercises()
 reports.python_exercises()
 reports.cSharp_exercises()
 reports.exercises_with_students()
-
+reports.students_with_exercises()
 
 

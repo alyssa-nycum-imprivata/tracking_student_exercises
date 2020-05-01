@@ -5,6 +5,17 @@ class Student():
         self.last_name = last
         self.slack = slack
         self.cohort = cohort
+        self.exercises = []
+
+    def exercise_report(self):
+        exercises = []
+        for exercise in self.exercises:
+            exercises.append(exercise.name)
+
+        print(f'{self.first_name} {self.last_name} is working on:')
+
+        for exercise in exercises:
+            print(f'\t* {exercise}')
 
     def __repr__(self):
         return f'{self.first_name} {self.last_name} is in {self.cohort}'
