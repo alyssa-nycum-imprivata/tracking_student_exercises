@@ -315,6 +315,62 @@ class StudentExerciseReports():
                     print(f'\t* {exercise}')
             print("----------------------------------------")
 
+    def exercises_with_instructors_and_students(self):
+
+        """Retrieve all exercises with the instructors that assign each exercise and which students they assign each exercise to"""
+
+        exercises = dict()
+    
+        with sqlite3.connect(self.db_path) as conn:
+            db_cursor = conn.cursor()
+
+            db_cursor.execute("""
+                SELECT
+                    e.Id AS ExerciseId,
+                    e.Name,
+                    i.Id AS InstructorId,
+                    i.First_Name,
+                    i.Last_Name,
+                    s.Id AS StudentId,
+                    s.First_Name,
+                    s.Last_Name
+                FROM Instructor i 
+                JOIN Student_Exercises se ON i.Id = se.InstructorId
+                JOIN Exercise e ON e.Id = se.ExerciseId
+                JOIN Student s ON s.Id = se.StudentId
+                GROUP BY se.ExerciseId, s.Id
+            """)
+
+            dataset = db_cursor.fetchall()
+
+            for row in dataset:
+                exercise_id = row[0]
+                exercise_name = row[1]
+                instructor_id = row[2]
+                instructor_name = f'{row[3]} {row[4]}'
+                student_id = row[5]
+                student_name = f'{row[6]} {row[7]}'
+                
+                if exercise_name not in exercises:
+                    exercises[exercise_name] = {}
+                    if instructor_name not in exercises[exercise_name]:
+                        exercises[exercise_name] = {
+                            instructor_name: [student_name]
+                            }
+                    else:
+                        exercises[exercise_name][instructor_name].append(student_name)
+                else: 
+                    exercises[exercise_name][instructor_name].append(student_name)
+                    
+            print("****EXERCISES WITH ASSIGNED INSTRUCTORS AND STUDENTS****")
+            for exercise_name, instructors in exercises.items():
+                print(exercise_name)
+                for instructor in instructors:
+                    for students in instructors.values():
+                        for student in students:
+                            print(f"\t* {instructor} assigned this to {student}")
+            print("----------------------------------------")
+
 reports = StudentExerciseReports()
 reports.all_cohorts()
 reports.all_students()
@@ -326,5 +382,6 @@ reports.cSharp_exercises()
 reports.exercises_with_students()
 reports.students_with_exercises()
 reports.instructors_with_exercises()
+reports.exercises_with_instructors_and_students()
 
 
